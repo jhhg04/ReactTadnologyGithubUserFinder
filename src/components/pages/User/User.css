@@ -46,6 +46,7 @@
   padding: 10px;
   display: inline-block;
   margin: 10px 0;
+  text-decoration: none;
 }
 
 .user-repos {

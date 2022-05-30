@@ -1,24 +1,53 @@
-import React, { useState } from 'react';
-import axios from '../../axios';
-import User from '../User/User';
+import React, { useState, useEffect } from 'react';
+import axios from '../../../axios';
+import User from '../../ui/User/User';
 import './Home.css';
 
 const Home = () => {
   const [query, setQuery] = useState('');
+  // Users fetched from API
   const [users, setUsers] = useState([]);
+  // Page
+  const [page, setPage] = useState(1);
+  // Per Page
+  const [limit, setLimit] = useState(10);
+
   const handleQueryInput = (e) => {
     const value = e.target.value;
     setQuery(value);
   };
+
+  const handlePrevPage = () => {
+    setPage((page) => {
+      if (page === 1) return page;
+      else return page - 1;
+    });
+  };
+
+  const handleNextPage = () => {
+    setPage((page) => page + 1);
+  };
+
+  const handlePageLimit = (e) => {
+    const value = e.target.value;
+    setLimit(parseInt(value));
+  };
+
   const fetchUsers = async () => {
     try {
-      const { data } = await axios.get('/search/users?q=' + query);
+      const { data } = await axios.get('/search/users?q=' + query, {
+        params: {
+          page: page,
+          per_page: limit,
+        },
+      });
       return data?.items;
     } catch (error) {
       console.error(error);
       return null;
     }
   };
+
   const handleSearchUsers = async (e) => {
     e.preventDefault();
     if (query) {
@@ -28,6 +57,16 @@ const Home = () => {
       console.log('Your quuery is empty...');
     }
   };
+
+  useEffect(() => {
+    const displayUsersOnChange = async () => {
+      if (query) {
+        const items = await fetchUsers();
+        setUsers(items);
+      }
+    };
+    displayUsersOnChange();
+  }, [page, limit]);
   return (
     <div className='container'>
       <div className='search-form'>
@@ -41,7 +80,7 @@ const Home = () => {
         <div className='more-options'>
           <label>
             <small>Per Page</small>
-            <select>
+            <select onChange={handlePageLimit}>
               <option value='10'>10</option>
               <option value='20'>20</option>
               <option value='50'>50</option>
@@ -49,8 +88,8 @@ const Home = () => {
             </select>
           </label>
           <div className='pagination'>
-            <button>1</button>
-            <button>2</button>
+            <button onClick={handlePrevPage}>{page}</button>
+            <button onClick={handleNextPage}>{page + 1}</button>
           </div>
         </div>
         {users ? (
